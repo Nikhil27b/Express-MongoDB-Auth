@@ -6,8 +6,11 @@ Simple Auth with Express and Mongodb
  - User Registration
  - User Login
  - Secured Password with Bcrypt
+ - Cookies for Auth
  
 ### TODO
 
-- Cookies For Auth
+- Create post
+- Show user profile
+
 
