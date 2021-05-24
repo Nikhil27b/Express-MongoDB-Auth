@@ -1,8 +1,9 @@
 require("dotenv").config();
+const auth = require("./db/auth")
 const express = require("express");
 require("./db/connection");
-const webtoken = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const cookieparser = require("cookie-parser");
 const Users = require("./model/user")
 const path = require("path");
 const port = process.env.port || 3000;
@@ -15,7 +16,7 @@ const dynamic = path.join(__dirname, "./screens");
 
 app.use(express.json());
 app.use(express.urlencoded({extended:false}))
-
+app.use(cookieparser());
 app.set("view engine", "hbs");
 
 app.set("views", dynamic);
@@ -28,6 +29,13 @@ app.get("/", (req, res) => {
   res.render("home", {
   });
 });
+
+app.get("/user", auth, (req, res) => {
+  res.render("user", {
+    username: auth.findOne({username}),
+  });
+});
+
 
 app.get("/register", (req,res)=>{
 res.status(200).render("signup")
@@ -44,6 +52,12 @@ app.post("/login", async (req ,res)=>{
     const checkemail = await Users.findOne({email : email});
     const isValid = bcrypt.compare(password,checkemail.password);
     const token = await checkemail.genrateAuthToken();
+    res.cookie("jwt",token,{
+      httpOnly:true,
+      expires: new Date(Date.now() + 50000)
+    });
+
+
     if(isValid) {
       res.status(201).render("home",{
         username:checkemail.username,
@@ -65,6 +79,11 @@ app.post("/register", async (req, res) => {
         password : req.body.password,
     });
     const token = await user.genrateAuthToken();
+    res.cookie("jwt",token,{
+      httpOnly:true,
+      expires: new Date(Date.now() + 50000)
+    });
+
     const userdata = await user.save();
     res.status(201).render("home",{
         username:req.body.username,        
