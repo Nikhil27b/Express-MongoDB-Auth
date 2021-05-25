@@ -8,6 +8,7 @@ const Users = require("./model/user")
 const path = require("path");
 const port = process.env.port || 3000;
 const hbs = require("hbs");
+const { Console } = require("console");
 const app = express();
 
 
@@ -54,7 +55,6 @@ app.post("/login", async (req ,res)=>{
     const token = await checkemail.genrateAuthToken();
     res.cookie("jwt",token,{
       httpOnly:true,
-      expires: new Date(Date.now() + 50000)
     });
 
 
@@ -81,7 +81,6 @@ app.post("/register", async (req, res) => {
     const token = await user.genrateAuthToken();
     res.cookie("jwt",token,{
       httpOnly:true,
-      expires: new Date(Date.now() + 50000)
     });
 
     const userdata = await user.save();
@@ -92,6 +91,23 @@ app.post("/register", async (req, res) => {
     res.status(400).send(error);
   }
 });
+app.get("/logout" , auth, async(req,res)=>{
+  console.log(req.user)
+  try {
+    // req.user.tokens = req.user.tokens.filter((currenelement)=>{
+    //   return currenelement !=req.token;
+    // });
+    req.user.tokens = [];
+    res.clearCookie("jwt" , 
+    {domain: "localhost", path: "/"});
+    console.log("Account Logout")
+    await req.user.save();
+    console.log(req.user);
+    res.render("login");
+  } catch (error) {
+    res.status(500).send(error)
+  }
+})
 
 app.listen(port, () => {
   console.log("Server Started");
